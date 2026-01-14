@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | Inventory System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+    .card-header { background-color: #0d6efd; color: white; }
+    .table-hover tbody tr:hover { background-color: #e2e6ea; }
+    .btn-edit { background-color: #ffc107; color: white; }
+    .btn-discontinue { background-color: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+      <span class="navbar-brand">Inventory System</span>
+      <span class="text-white">
+        <%= user.username %> — <%= user.role.toUpperCase() %> | 
+        <a href="/logout" class="text-white">Logout</a>
+      </span>
+    </div>
+  </nav>
+
+  <div class="container mt-4">
+    <h3 class="mb-2">Data Barang Gudang</h3>
+
+    <!-- Hak akses role -->
+    <% if(user.role === 'admin') { %>
+      <p class="text-muted">Akses terbatas sebagai Admin Staff</p>
+    <% } else if(user.role === 'manager') { %>
+      <p class="text-muted">Akses penuh sebagai Manager</p>
+    <% } %>
+
+    <!-- Info cards (Admin & Manager) -->
+    <div class="row mb-3">
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-header">Total Barang</div>
+          <div class="card-body"><%= items.length %></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-header bg-warning text-dark">Stok Rendah</div>
+          <div class="card-body"><%= items.filter(i => i.stock <= i.minStock).length %></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Tambah Barang (Manager only) -->
+    <% if(user.role === 'manager') { %>
+      <div class="card p-3 mb-4 shadow-sm">
+        <h5 class="card-header mb-3">Tambah Barang Baru</h5>
+        <form method="POST" action="/add">
+          <div class="mb-2"><input type="text" name="name" class="form-control" placeholder="Nama Barang" required></div>
+          <div class="mb-2"><input type="text" name="category" class="form-control" placeholder="Kategori" required></div>
+          <div class="mb-2"><input type="number" name="price" class="form-control" placeholder="Harga" required></div>
+          <div class="mb-2"><input type="number" name="stock" class="form-control" placeholder="Stok" required></div>
+          <div class="mb-2"><input type="number" name="minStock" class="form-control" placeholder="Min Stok" required></div>
+          <div class="mb-2"><input type="text" name="location" class="form-control" placeholder="Lokasi Rak" required></div>
+          <button type="submit" class="btn btn-success w-100">Tambah Barang</button>
+        </form>
+      </div>
+    <% } %>
+
+    <!-- Tabel Data Barang -->
+    <table class="table table-striped table-hover table-bordered">
+      <thead class="table-primary">
+        <tr>
+          <th>Nama</th>
+          <th>Kategori</th>
+          <th>Harga</th>
+          <th>Stok</th>
+          <th>Lokasi</th>
+          <% if(user.role === 'manager') { %><th>Aksi</th><% } %>
+        </tr>
+      </thead>
+      <tbody>
+        <% if(items && items.length > 0) { %>
+          <% items.forEach(item => { %>
+            <tr>
+              <td><%= item.name %></td>
+              <td><%= item.category %></td>
+              <td><%= item.price.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' }) %></td>
+              <td><%= item.stock %></td>
+              <td><%= item.location %></td>
+              <% if(user.role === 'manager') { %>
+                <td>
+                  <form method="POST" action="/edit/<%= item.id %>" class="d-flex mb-1">
+                    <input type="number" name="stock" value="<%= item.stock %>" style="width:70px;" required>
+                    <input type="text" name="location" value="<%= item.location %>" style="width:120px;" required>
+                    <button class="btn btn-edit btn-sm ms-1">✏️</button>
+                  </form>
+                  <form method="GET" action="/delete/<%= item.id %>" class="d-inline">
+                    <button class="btn btn-discontinue btn-sm">🗑️ Discontinue</button>
+                  </form>
+                </td>
+              <% } %>
+            </tr>
+          <% }) %>
+        <% } else { %>
+          <tr>
+            <td colspan="<%= user.role === 'manager' ? 6 : 5 %>" class="text-center">Tidak ada data barang</td>
+          </tr>
+        <% } %>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>
